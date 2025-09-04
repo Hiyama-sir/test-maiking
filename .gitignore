@@ -43,6 +43,7 @@ instance/
 # Uploads
 uploads/
 
-# Excel files (except sample)
+# Excel files (except sample and main data file)
 *.xlsx
 !sample.xlsx
+!"小テスト Retrieved from コーパス4500 4th Edition.xlsx"
