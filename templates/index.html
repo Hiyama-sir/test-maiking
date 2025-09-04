@@ -602,6 +602,27 @@
             background: #ccc;
             cursor: not-allowed;
         }
+
+        .random-range-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .random-range-selector h4 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .random-range-selector h4::before {
+            content: "🎲";
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -618,6 +639,8 @@
                     <li>下の表からテストに含めたい単語のチェックボックスをクリックしてください</li>
                     <li>「選択した単語でテスト作成」ボタンをクリックしてテストを生成</li>
                     <li>クイック選択ボタンで簡単に選択できます</li>
+                    <li>範囲指定で連続した単語を選択できます</li>
+                    <li>範囲からランダムで指定個数を選択できます</li>
                 </ul>
             </div>
 
@@ -635,17 +658,42 @@
                     <div class="range-inputs">
                         <div class="range-input-group">
                             <label for="startRow">開始行</label>
-                            <input type="number" id="startRow" placeholder="2" min="2">
+                            <input type="number" id="startRow" placeholder="2" min="1">
                         </div>
                         <div class="range-separator">〜</div>
                         <div class="range-input-group">
                             <label for="endRow">終了行</label>
-                            <input type="number" id="endRow" placeholder="10" min="2">
+                            <input type="number" id="endRow" placeholder="10" min="1">
                         </div>
                     </div>
                     <div class="range-buttons">
                         <button class="range-btn" onclick="selectRange()">範囲を選択</button>
                         <button class="range-btn" onclick="clearRangeInputs()">クリア</button>
+                    </div>
+                </div>
+
+                <div class="random-range-selector">
+                    <h4>範囲からランダム選択</h4>
+                    <div class="range-inputs">
+                        <div class="range-input-group">
+                            <label for="randomStartRow">開始行</label>
+                            <input type="number" id="randomStartRow" placeholder="1" min="1">
+                        </div>
+                        <div class="range-separator">〜</div>
+                        <div class="range-input-group">
+                            <label for="randomEndRow">終了行</label>
+                            <input type="number" id="randomEndRow" placeholder="50" min="1">
+                        </div>
+                        <div class="range-separator">から</div>
+                        <div class="range-input-group">
+                            <label for="randomCount">個数</label>
+                            <input type="number" id="randomCount" placeholder="10" min="1">
+                        </div>
+                        <div class="range-separator">個</div>
+                    </div>
+                    <div class="range-buttons">
+                        <button class="range-btn" onclick="selectRandomFromRange()">ランダム選択</button>
+                        <button class="range-btn" onclick="clearRandomInputs()">クリア</button>
                     </div>
                 </div>
                 
@@ -960,6 +1008,61 @@
         function clearRangeInputs() {
             document.getElementById('startRow').value = '';
             document.getElementById('endRow').value = '';
+        }
+
+        function selectRandomFromRange() {
+            const startRow = parseInt(document.getElementById('randomStartRow').value);
+            const endRow = parseInt(document.getElementById('randomEndRow').value);
+            const count = parseInt(document.getElementById('randomCount').value);
+            
+            if (!startRow || !endRow || !count) {
+                alert('開始行、終了行、個数をすべて入力してください');
+                return;
+            }
+            
+            if (startRow > endRow) {
+                alert('開始行は終了行より小さい値を入力してください');
+                return;
+            }
+            
+            const availableRows = [];
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            
+            // 指定範囲内の行番号を取得
+            for (let i = 0; i < checkboxes.length; i++) {
+                const rowNumber = parseInt(checkboxes[i].value);
+                if (rowNumber >= startRow && rowNumber <= endRow) {
+                    availableRows.push(checkboxes[i]);
+                }
+            }
+            
+            if (availableRows.length === 0) {
+                alert('指定された範囲に単語が見つかりませんでした');
+                return;
+            }
+            
+            if (count > availableRows.length) {
+                alert(`指定された範囲には${availableRows.length}個の単語しかありません。${count}個以下で指定してください。`);
+                return;
+            }
+            
+            // 既存の選択をクリア
+            deselectAll();
+            
+            // ランダムに選択
+            const shuffled = availableRows.sort(() => 0.5 - Math.random());
+            for (let i = 0; i < count; i++) {
+                shuffled[i].checked = true;
+            }
+            
+            updateSelection();
+            alert(`${startRow}行目から${endRow}行目までの範囲から、ランダムに${count}個の単語を選択しました。`);
+        }
+
+        function clearRandomInputs() {
+            document.getElementById('randomStartRow').value = '';
+            document.getElementById('randomEndRow').value = '';
+            document.getElementById('randomCount').value = '';
         }
 
 
