@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-import pandas as pd
+from openpyxl import load_workbook
 import os
 
 app = Flask(__name__)
@@ -7,22 +7,23 @@ app = Flask(__name__)
 def load_excel_data():
     """Excelファイルからデータを読み込む"""
     try:
-        # sample.xlsxファイルを読み込み
-        df = pd.read_excel('小テスト Retrieved from コーパス4500 4th Edition.xlsx')
+        # Excelファイルを読み込み
+        workbook = load_workbook('小テスト Retrieved from コーパス4500 4th Edition.xlsx')
+        worksheet = workbook.active
         
         # A列（英単語）とB列（日本語）のデータを取得
         # A1行目から直接データを読み込み
-        words = df.iloc[:, 0].dropna().tolist()  # A列（英単語）
-        meanings = df.iloc[:, 1].dropna().tolist()  # B列（日本語）
-        
-        # データを辞書のリストに変換
         data = []
-        for i, (word, meaning) in enumerate(zip(words, meanings), start=1):  # 行番号は1から開始
-            data.append({
-                'row_number': i,
-                'word': str(word),
-                'meaning': str(meaning)
-            })
+        row_num = 1
+        
+        for row in worksheet.iter_rows(min_row=1, values_only=True):
+            if row[0] is not None and row[1] is not None:  # A列とB列の両方に値がある場合
+                data.append({
+                    'row_number': row_num,
+                    'word': str(row[0]),
+                    'meaning': str(row[1])
+                })
+                row_num += 1
         
         return data
     except Exception as e:
