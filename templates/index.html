@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小テストジェネレーター</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #333;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: #fafafa;
+            border-radius: 10px;
+            border-left: 5px solid #333;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+        }
+
+        .section h2::before {
+            content: "📚";
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            background: #333;
+            color: white;
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .row-number {
+            background: #e0e0e0;
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .word {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .meaning {
+            color: #666;
+        }
+
+        .test-generator {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #333;
+        }
+
+        .btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            background: #555;
+        }
+
+        .btn-secondary {
+            background: #666;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .test-result {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 5px solid #333;
+            display: none;
+        }
+
+        .test-result h3 {
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .test-result h3::before {
+            content: "✅";
+            margin-right: 10px;
+        }
+
+        .test-item {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+
+        .test-item .question {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .test-item .answer {
+            color: #666;
+            font-style: italic;
+        }
+
+        /* 2列レイアウトのテスト用スタイル */
+        .test-format-2column {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+
+        .test-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #333;
+        }
+
+        .test-header h2 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .test-header .info {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .test-column {
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            background: #fafafa;
+        }
+
+        .test-column h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.3em;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .test-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .test-table th {
+            background: #333;
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid #333;
+        }
+
+        .test-table td {
+            padding: 12px 8px;
+            text-align: center;
+            border: 1px solid #ccc;
+            background: white;
+        }
+
+        .test-table .number {
+            width: 60px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+
+        .test-table .word {
+            width: 200px;
+            font-weight: 600;
+            color: #333;
+            text-align: left;
+            padding-left: 10px;
+        }
+
+        .test-table .answer {
+            width: 150px;
+            background: #f9f9f9;
+            border: 1px dashed #999;
+            min-height: 30px;
+        }
+
+        .print-controls {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .print-controls button {
+            margin: 0 10px;
+        }
+
+        /* 印刷用スタイル */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .test-format-2column,
+            .test-format-2column * {
+                visibility: visible;
+            }
+            
+            .test-format-2column {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                box-shadow: none;
+                border: none;
+            }
+            
+            .print-controls {
+                display: none;
+            }
+            
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #dc3545;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #333;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .instructions {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+        }
+
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .instructions h3::before {
+            content: "💡";
+            margin-right: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #856404;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .checkbox-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .checkbox-item:hover {
+            border-color: #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+            accent-color: #333;
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            font-weight: 500;
+            color: #333;
+            flex: 1;
+        }
+
+        .checkbox-item .word-preview {
+            font-weight: 600;
+            color: #333;
+            margin-left: 10px;
+            font-size: 0.9em;
+        }
+
+        .selection-summary {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #333;
+        }
+
+        .selection-summary h4 {
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .selection-summary h4::before {
+            content: "📋";
+            margin-right: 10px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .quick-btn {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .quick-btn:hover {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        .quick-btn.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        .range-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .range-selector h4 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .range-selector h4::before {
+            content: "🔢";
+            margin-right: 10px;
+        }
+
+        .range-inputs {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .range-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .range-input-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .range-input-group input {
+            width: 80px;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .range-input-group input:focus {
+            outline: none;
+            border-color: #333;
+        }
+
+        .range-separator {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin: 0 10px;
+        }
+
+        .range-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .range-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .range-btn:hover {
+            background: #555;
+        }
+
+        .range-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>小テストジェネレーター</h1>
+            <p>Excelファイルから選択した単語でテストを作成できます</p>
+        </div>
+
+        <div class="content">
+            <div class="instructions">
+                <h3>簡単な使い方</h3>
+                <ul>
+                    <li>下の表からテストに含めたい単語のチェックボックスをクリックしてください</li>
+                    <li>「選択した単語でテスト作成」ボタンをクリックしてテストを生成</li>
+                    <li>クイック選択ボタンで簡単に選択できます</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>単語一覧と選択</h2>
+                <div class="quick-actions">
+                    <button class="quick-btn" onclick="selectAll()">全選択</button>
+                    <button class="quick-btn" onclick="deselectAll()">全解除</button>
+                    <button class="quick-btn" onclick="selectRandom(5)">ランダム5個</button>
+                    <button class="quick-btn" onclick="selectRandom(10)">ランダム10個</button>
+                </div>
+
+                <div class="range-selector">
+                    <h4>範囲指定で選択</h4>
+                    <div class="range-inputs">
+                        <div class="range-input-group">
+                            <label for="startRow">開始行</label>
+                            <input type="number" id="startRow" placeholder="2" min="2">
+                        </div>
+                        <div class="range-separator">〜</div>
+                        <div class="range-input-group">
+                            <label for="endRow">終了行</label>
+                            <input type="number" id="endRow" placeholder="10" min="2">
+                        </div>
+                    </div>
+                    <div class="range-buttons">
+                        <button class="range-btn" onclick="selectRange()">範囲を選択</button>
+                        <button class="range-btn" onclick="clearRangeInputs()">クリア</button>
+                    </div>
+                </div>
+                
+                <div class="checkbox-container" id="checkboxContainer">
+                    {% for item in data %}
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="row{{ item.row_number }}" value="{{ item.row_number }}" onchange="updateSelection()">
+                        <label for="row{{ item.row_number }}">
+                            <strong>{{ item.row_number }}行目</strong>
+                            <span class="word-preview">{{ item.word }}</span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="selection-summary" id="selectionSummary">
+                    <h4>選択状況</h4>
+                    <p id="selectionText"></p>
+                </div>
+            </div>
+
+            <div class="test-generator">
+                <h2>テスト作成</h2>
+                <div class="form-group">
+                    <label>選択された単語数: <span id="selectedCount">0</span>個</label>
+                </div>
+                
+                <button class="btn" onclick="generateTest()" id="generateBtn" disabled>選択した単語でテスト作成</button>
+                <button class="btn btn-secondary" onclick="clearSelection()">選択をクリア</button>
+                <button class="btn btn-danger" onclick="printTest()" id="printBtn" disabled>テストを印刷</button>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>テストを生成中...</p>
+                </div>
+
+                <div class="error-message" id="errorMessage"></div>
+
+                <div class="test-result" id="testResult">
+                    <h3>生成されたテスト</h3>
+                    <div id="testContent"></div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="btn" onclick="show2ColumnTest()">2列レイアウトで表示</button>
+                    </div>
+                </div>
+
+                <!-- 2列レイアウトのテスト形式 -->
+                <div class="test-format-2column" id="testFormat2Column" style="display: none;">
+                    <div class="test-header">
+                        <h2>英単語テスト</h2>
+                        <div class="info">選択された単語数: <span id="testWordCount">0</span>個</div>
+                    </div>
+                    
+                    <div class="test-grid" id="testGrid">
+                        <!-- 2列のテストがここに生成されます -->
+                    </div>
+                    
+                    <div class="print-controls">
+                        <button class="btn" onclick="printTest()">テストを印刷</button>
+                        <button class="btn btn-secondary" onclick="showSimpleTest()">シンプル表示に戻す</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedRows = [];
+
+        function updateSelection() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            selectedRows = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            
+            const selectedCount = document.getElementById('selectedCount');
+            const generateBtn = document.getElementById('generateBtn');
+            const printBtn = document.getElementById('printBtn');
+            const selectionSummary = document.getElementById('selectionSummary');
+            const selectionText = document.getElementById('selectionText');
+            
+            selectedCount.textContent = selectedRows.length;
+            generateBtn.disabled = selectedRows.length === 0;
+            printBtn.disabled = selectedRows.length === 0;
+            
+            if (selectedRows.length > 0) {
+                selectionSummary.style.display = 'block';
+                selectionText.textContent = `選択された行: ${selectedRows.join(', ')}`;
+            } else {
+                selectionSummary.style.display = 'none';
+            }
+        }
+
+        function selectAll() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = true);
+            updateSelection();
+        }
+
+        function deselectAll() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+            updateSelection();
+        }
+
+        function selectRandom(count) {
+            deselectAll();
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const shuffled = Array.from(checkboxes).sort(() => 0.5 - Math.random());
+            
+            for (let i = 0; i < Math.min(count, checkboxes.length); i++) {
+                shuffled[i].checked = true;
+            }
+            updateSelection();
+        }
+
+        function clearSelection() {
+            deselectAll();
+            document.getElementById('testResult').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function generateTest() {
+            if (selectedRows.length === 0) {
+                showError('単語を選択してください');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const testResult = document.getElementById('testResult');
+            const errorMessage = document.getElementById('errorMessage');
+
+            loading.style.display = 'block';
+            testResult.style.display = 'none';
+            errorMessage.style.display = 'none';
+
+            fetch('/generate_test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    selected_rows: selectedRows
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    displayTest(data.test_data);
+                } else {
+                    showError(data.error || 'テストの生成に失敗しました');
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                showError('エラーが発生しました: ' + error.message);
+            });
+        }
+
+        function displayTest(testData) {
+            const testResult = document.getElementById('testResult');
+            const testContent = document.getElementById('testContent');
+            const testFormat2Column = document.getElementById('testFormat2Column');
+            const testWordCount = document.getElementById('testWordCount');
+
+            // 単語数を更新
+            testWordCount.textContent = testData.length;
+
+            // シンプル表示
+            let html = '';
+            testData.forEach((item, index) => {
+                html += `
+                    <div class="test-item">
+                        <div class="question">問題 ${index + 1}: <strong>${item.word}</strong> の意味を答えなさい</div>
+                        <div class="answer">答え: ${item.meaning}</div>
+                    </div>
+                `;
+            });
+
+            testContent.innerHTML = html;
+            testResult.style.display = 'block';
+
+            // 2列レイアウトのテストも生成
+            generate2ColumnTest(testData);
+        }
+
+        function generate2ColumnTest(testData) {
+            const testGrid = document.getElementById('testGrid');
+            
+            let html = '';
+            
+            if (testData.length <= 25) {
+                // 25個以下は左列のみ
+                html += '<div class="test-column" style="grid-column: 1 / -1; max-width: 600px; margin: 0 auto;">';
+                html += '<h3>テスト問題</h3>';
+                html += '<table class="test-table">';
+                html += '<thead><tr><th class="number">番号</th><th class="word">英単語</th><th class="answer">解答欄</th></tr></thead>';
+                html += '<tbody>';
+                testData.forEach((item, index) => {
+                    html += `<tr>
+                        <td class="number">${item.row_number}</td>
+                        <td class="word">${item.word}</td>
+                        <td class="answer"></td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                html += '</div>';
+            } else {
+                // 25個以上は2列に分割
+                const midPoint = Math.ceil(testData.length / 2);
+                const leftColumn = testData.slice(0, midPoint);
+                const rightColumn = testData.slice(midPoint);
+                
+                            // 左列
+            html += '<div class="test-column">';
+            html += '<h3>左列</h3>';
+            html += '<table class="test-table">';
+            html += '<thead><tr><th class="number">番号</th><th class="word">英単語</th><th class="answer">解答欄</th></tr></thead>';
+            html += '<tbody>';
+            leftColumn.forEach((item, index) => {
+                html += `<tr>
+                    <td class="number">${item.row_number}</td>
+                    <td class="word">${item.word}</td>
+                    <td class="answer"></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            html += '</div>';
+            
+            // 右列
+            html += '<div class="test-column">';
+            html += '<h3>右列</h3>';
+            html += '<table class="test-table">';
+            html += '<thead><tr><th class="number">番号</th><th class="word">英単語</th><th class="answer">解答欄</th></tr></thead>';
+            html += '<tbody>';
+            rightColumn.forEach((item, index) => {
+                html += `<tr>
+                    <td class="number">${item.row_number}</td>
+                    <td class="word">${item.word}</td>
+                    <td class="answer"></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            html += '</div>';
+            }
+            
+            testGrid.innerHTML = html;
+        }
+
+        function show2ColumnTest() {
+            document.getElementById('testResult').style.display = 'none';
+            document.getElementById('testFormat2Column').style.display = 'block';
+        }
+
+        function showSimpleTest() {
+            document.getElementById('testResult').style.display = 'block';
+            document.getElementById('testFormat2Column').style.display = 'none';
+        }
+
+        function printTest() {
+            const testFormat2Column = document.getElementById('testFormat2Column');
+            if (testFormat2Column.style.display !== 'none') {
+                window.print();
+            } else {
+                alert('2列レイアウトのテストを表示してから印刷してください');
+            }
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        function selectRange() {
+            const startRow = parseInt(document.getElementById('startRow').value);
+            const endRow = parseInt(document.getElementById('endRow').value);
+            
+            if (!startRow || !endRow) {
+                alert('開始行と終了行を入力してください');
+                return;
+            }
+            
+            if (startRow > endRow) {
+                alert('開始行は終了行より小さい値を入力してください');
+                return;
+            }
+            
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            let selectedCount = 0;
+            
+            // 既存の選択をクリア
+            deselectAll();
+            
+            for (let i = 0; i < checkboxes.length; i++) {
+                const rowNumber = parseInt(checkboxes[i].value);
+                if (rowNumber >= startRow && rowNumber <= endRow) {
+                    checkboxes[i].checked = true;
+                    selectedCount++;
+                }
+            }
+            
+            updateSelection();
+            
+            if (selectedCount > 0) {
+                alert(`${startRow}行目から${endRow}行目までの単語を選択しました。選択された単語数: ${selectedCount}個`);
+            } else {
+                alert('指定された範囲に単語が見つかりませんでした');
+            }
+        }
+
+        function clearRangeInputs() {
+            document.getElementById('startRow').value = '';
+            document.getElementById('endRow').value = '';
+        }
+
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSelection();
+        });
+    </script>
+</body>
+</html>
