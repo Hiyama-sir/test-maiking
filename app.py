@@ -78,3 +78,8 @@ def get_all_data():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))
     app.run(debug=False, host='0.0.0.0', port=port)
+
+# Gunicorn用の設定
+if __name__ != '__main__':
+    # 本番環境用の設定
+    pass
