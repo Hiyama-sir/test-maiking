@@ -247,17 +247,16 @@
         }
 
         .test-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
+            display: block;
             margin-bottom: 30px;
         }
 
         .test-column {
-            border: 2px solid #333;
-            border-radius: 10px;
-            padding: 20px;
-            background: #fafafa;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            background: transparent;
+            width: 100%;
         }
 
         .test-column h3 {
@@ -307,11 +306,11 @@
         }
 
         .test-table .answer {
-            width: 300px;
+            width: 400px;
             background: #f9f9f9;
             border: 2px dashed #999;
-            min-height: 80px;
-            padding: 15px;
+            min-height: 100px;
+            padding: 20px;
         }
 
         /* 回答用紙のスタイル */
@@ -945,35 +944,13 @@
             
             let html = '';
             
-            if (testData.length <= 25) {
-                // 25個以下は左列のみ
-                html += '<div class="test-column" style="grid-column: 1 / -1; max-width: 600px; margin: 0 auto;">';
-                html += '<h3>テスト問題</h3>';
-                html += '<table class="test-table">';
-                html += '<thead><tr><th class="number">番号</th><th class="word">英単語</th><th class="answer">解答欄</th></tr></thead>';
-                html += '<tbody>';
-                testData.forEach((item, index) => {
-                    html += `<tr>
-                        <td class="number">${item.row_number}</td>
-                        <td class="word">${item.word}</td>
-                        <td class="answer"></td>
-                    </tr>`;
-                });
-                html += '</tbody></table>';
-                html += '</div>';
-            } else {
-                // 25個以上は2列に分割
-                const midPoint = Math.ceil(testData.length / 2);
-                const leftColumn = testData.slice(0, midPoint);
-                const rightColumn = testData.slice(midPoint);
-                
-                            // 左列
+            // 1列レイアウトで全幅表示
             html += '<div class="test-column">';
-            html += '<h3>左列</h3>';
+            html += '<h3>テスト問題</h3>';
             html += '<table class="test-table">';
             html += '<thead><tr><th class="number">番号</th><th class="word">英単語</th><th class="answer">解答欄</th></tr></thead>';
             html += '<tbody>';
-            leftColumn.forEach((item, index) => {
+            testData.forEach((item, index) => {
                 html += `<tr>
                     <td class="number">${item.row_number}</td>
                     <td class="word">${item.word}</td>
@@ -982,23 +959,6 @@
             });
             html += '</tbody></table>';
             html += '</div>';
-            
-            // 右列
-            html += '<div class="test-column">';
-            html += '<h3>右列</h3>';
-            html += '<table class="test-table">';
-            html += '<thead><tr><th class="number">番号</th><th class="word">英単語</th><th class="answer">解答欄</th></tr></thead>';
-            html += '<tbody>';
-            rightColumn.forEach((item, index) => {
-                html += `<tr>
-                    <td class="number">${item.row_number}</td>
-                    <td class="word">${item.word}</td>
-                    <td class="answer"></td>
-                </tr>`;
-            });
-            html += '</tbody></table>';
-            html += '</div>';
-            }
             
             testGrid.innerHTML = html;
         }
@@ -1012,60 +972,21 @@
             
             let html = '';
             
-            if (testData.length <= 25) {
-                // 25個以下は左列のみ
-                html += '<div class="test-column" style="grid-column: 1 / -1; max-width: 600px; margin: 0 auto;">';
-                html += '<h3>回答用紙（解答付き）</h3>';
-                html += '<table class="test-table">';
-                html += '<thead><tr><th class="number">番号</th><th class="word">英単語</th><th class="answer">解答</th></tr></thead>';
-                html += '<tbody>';
-                testData.forEach((item, index) => {
-                    html += `<tr>
-                        <td class="number">${item.row_number}</td>
-                        <td class="word">${item.word}</td>
-                        <td class="answer">${item.meaning}</td>
-                    </tr>`;
-                });
-                html += '</tbody></table>';
-                html += '</div>';
-            } else {
-                // 25個以上は2列に分割
-                const midPoint = Math.ceil(testData.length / 2);
-                const leftColumn = testData.slice(0, midPoint);
-                const rightColumn = testData.slice(midPoint);
-                
-                // 左列
-                html += '<div class="test-column">';
-                html += '<h3>左列（解答付き）</h3>';
-                html += '<table class="test-table">';
-                html += '<thead><tr><th class="number">番号</th><th class="word">英単語</th><th class="answer">解答</th></tr></thead>';
-                html += '<tbody>';
-                leftColumn.forEach((item, index) => {
-                    html += `<tr>
-                        <td class="number">${item.row_number}</td>
-                        <td class="word">${item.word}</td>
-                        <td class="answer">${item.meaning}</td>
-                    </tr>`;
-                });
-                html += '</tbody></table>';
-                html += '</div>';
-                
-                // 右列
-                html += '<div class="test-column">';
-                html += '<h3>右列（解答付き）</h3>';
-                html += '<table class="test-table">';
-                html += '<thead><tr><th class="number">番号</th><th class="word">英単語</th><th class="answer">解答</th></tr></thead>';
-                html += '<tbody>';
-                rightColumn.forEach((item, index) => {
-                    html += `<tr>
-                        <td class="number">${item.row_number}</td>
-                        <td class="word">${item.word}</td>
-                        <td class="answer">${item.meaning}</td>
-                    </tr>`;
-                });
-                html += '</tbody></table>';
-                html += '</div>';
-            }
+            // 1列レイアウトで全幅表示
+            html += '<div class="test-column">';
+            html += '<h3>回答用紙（解答付き）</h3>';
+            html += '<table class="test-table">';
+            html += '<thead><tr><th class="number">番号</th><th class="word">英単語</th><th class="answer">解答</th></tr></thead>';
+            html += '<tbody>';
+            testData.forEach((item, index) => {
+                html += `<tr>
+                    <td class="number">${item.row_number}</td>
+                    <td class="word">${item.word}</td>
+                    <td class="answer">${item.meaning}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            html += '</div>';
             
             answerGrid.innerHTML = html;
         }
