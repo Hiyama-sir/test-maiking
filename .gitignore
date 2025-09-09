@@ -1,3 +1,7 @@
+# Excel files (データファイル)
+*.xlsx
+*.xls
+
 # Python
 __pycache__/
 *.py[cod]
@@ -21,7 +25,7 @@ wheels/
 *.egg
 MANIFEST
 
-# Virtual Environment
+# Virtual environment
 venv/
 env/
 ENV/
@@ -36,14 +40,9 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Flask
-instance/
-.webassets-cache
+# Logs
+*.log
 
-# Uploads
-uploads/
-
-# Excel files (except sample and main data file)
-*.xlsx
-!sample.xlsx
-!"小テスト Retrieved from コーパス4500 4th Edition.xlsx"
+# Temporary files
+*.tmp
+*.temp
