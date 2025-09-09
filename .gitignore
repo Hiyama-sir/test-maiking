@@ -1,6 +1,9 @@
-# Excel files (データファイル)
-*.xlsx
-*.xls
+# Excel files (データファイル) - 特定のファイルは除外しない
+# *.xlsx
+# *.xls
+
+# 特定のファイルのみ除外（必要に応じて）
+# private_data.xlsx
 
 # Python
 __pycache__/
