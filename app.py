@@ -41,7 +41,8 @@ def get_available_files():
     files = []
     excel_files = [
         '小テスト Retrieved from コーパス4500 4th Edition.xlsx',
-        'ターゲット1900.xlsx'
+        'ターゲット1900.xlsx',
+        'システム英単語.xlsx'
     ]
     
     for file in excel_files:
@@ -50,6 +51,8 @@ def get_available_files():
                 display_name = 'コーパス4500'
             elif file == 'ターゲット1900.xlsx':
                 display_name = 'ターゲット1900'
+            elif file == 'システム英単語.xlsx':
+                display_name = 'システム英単語'
             else:
                 display_name = file.replace('.xlsx', '')
             
