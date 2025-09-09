@@ -4,11 +4,15 @@ import os
 
 app = Flask(__name__)
 
-def load_excel_data():
+def load_excel_data(filename=None):
     """Excelファイルからデータを読み込む"""
     try:
+        # デフォルトのファイル名を設定
+        if filename is None:
+            filename = '小テスト Retrieved from コーパス4500 4th Edition.xlsx'
+        
         # Excelファイルを読み込み
-        workbook = load_workbook('小テスト Retrieved from コーパス4500 4th Edition.xlsx')
+        workbook = load_workbook(filename)
         worksheet = workbook.active
         
         # A列（英単語）とB列（日本語）のデータを取得
@@ -30,11 +34,36 @@ def load_excel_data():
         print(f"Excelファイルの読み込みエラー: {e}")
         return []
 
+def get_available_files():
+    """利用可能なExcelファイルのリストを取得"""
+    files = []
+    excel_files = [
+        '小テスト Retrieved from コーパス4500 4th Edition.xlsx',
+        'ターゲット1900.xlsx'
+    ]
+    
+    for file in excel_files:
+        if os.path.exists(file):
+            if file == '小テスト Retrieved from コーパス4500 4th Edition.xlsx':
+                display_name = 'コーパス4500'
+            elif file == 'ターゲット1900.xlsx':
+                display_name = 'ターゲット1900'
+            else:
+                display_name = file.replace('.xlsx', '')
+            
+            files.append({
+                'filename': file,
+                'display_name': display_name
+            })
+    
+    return files
+
 @app.route('/')
 def index():
     """メインページ"""
     data = load_excel_data()
-    return render_template('index.html', data=data)
+    available_files = get_available_files()
+    return render_template('index.html', data=data, available_files=available_files)
 
 
 @app.route('/generate_test', methods=['POST'])
@@ -74,6 +103,35 @@ def get_all_data():
     """全データを取得"""
     data = load_excel_data()
     return jsonify(data)
+
+@app.route('/load_file', methods=['POST'])
+def load_file():
+    """指定されたファイルのデータを読み込み"""
+    try:
+        data = request.get_json()
+        filename = data.get('filename')
+        
+        if not filename:
+            return jsonify({'error': 'ファイル名が指定されていません'}), 400
+        
+        file_data = load_excel_data(filename)
+        
+        if not file_data:
+            return jsonify({'error': 'ファイルの読み込みに失敗しました'}), 400
+        
+        return jsonify({
+            'success': True,
+            'data': file_data
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'エラーが発生しました: {str(e)}'}), 500
+
+@app.route('/get_available_files')
+def get_available_files_api():
+    """利用可能なファイル一覧を取得"""
+    files = get_available_files()
+    return jsonify(files)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))

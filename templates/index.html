@@ -662,6 +662,39 @@
             content: "🎲";
             margin-right: 10px;
         }
+
+        .file-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .file-selector label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .file-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .file-selector select:focus {
+            outline: none;
+            border-color: #333;
+        }
     </style>
 </head>
 <body>
@@ -681,6 +714,18 @@
                     <li>範囲指定で連続した単語を選択できます</li>
                     <li>範囲からランダムで指定個数を選択できます</li>
                 </ul>
+            </div>
+
+            <div class="section">
+                <h2>ファイル選択</h2>
+                <div class="file-selector">
+                    <label for="fileSelect">使用する単語集を選択してください:</label>
+                    <select id="fileSelect" onchange="loadSelectedFile()">
+                        {% for file in available_files %}
+                        <option value="{{ file.filename }}" {% if loop.first %}selected{% endif %}>{{ file.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
 
             <div class="section">
@@ -1169,6 +1214,67 @@
             document.getElementById('randomCount').value = '';
         }
 
+
+        function loadSelectedFile() {
+            const fileSelect = document.getElementById('fileSelect');
+            const selectedFile = fileSelect.value;
+            
+            if (!selectedFile) {
+                showError('ファイルが選択されていません');
+                return;
+            }
+            
+            const loading = document.getElementById('loading');
+            const checkboxContainer = document.getElementById('checkboxContainer');
+            
+            loading.style.display = 'block';
+            checkboxContainer.innerHTML = '';
+            
+            fetch('/load_file', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    filename: selectedFile
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    displayWordList(data.data);
+                    clearSelection();
+                } else {
+                    showError(data.error || 'ファイルの読み込みに失敗しました');
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                showError('エラーが発生しました: ' + error.message);
+            });
+        }
+
+        function displayWordList(data) {
+            const checkboxContainer = document.getElementById('checkboxContainer');
+            
+            let html = '';
+            data.forEach((item) => {
+                html += `
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="row${item.row_number}" value="${item.row_number}" onchange="updateSelection()">
+                        <label for="row${item.row_number}">
+                            <strong>${item.row_number}行目</strong>
+                            <span class="word-preview">${item.word}</span>
+                        </label>
+                    </div>
+                `;
+            });
+            
+            checkboxContainer.innerHTML = html;
+            updateSelection();
+        }
 
         // 初期化
         document.addEventListener('DOMContentLoaded', function() {
