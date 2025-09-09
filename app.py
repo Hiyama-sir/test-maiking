@@ -22,12 +22,14 @@ def load_excel_data(filename=None):
         
         for row in worksheet.iter_rows(min_row=1, values_only=True):
             if row[0] is not None and row[1] is not None:  # A列とB列の両方に値がある場合
-                data.append({
-                    'row_number': row_num,
-                    'word': str(row[0]),
-                    'meaning': str(row[1])
-                })
-                row_num += 1
+                # ヘッダー行（「単語名」など）を除外
+                if str(row[0]).strip() not in ['単語名', 'word', 'Word', 'WORD'] and str(row[1]).strip() not in ['意味', 'meaning', 'Meaning', 'MEANING']:
+                    data.append({
+                        'row_number': row_num,
+                        'word': str(row[0]),
+                        'meaning': str(row[1])
+                    })
+                    row_num += 1
         
         return data
     except Exception as e:
