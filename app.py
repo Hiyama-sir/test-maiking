@@ -60,6 +60,23 @@ def get_available_files():
                 'filename': file,
                 'display_name': display_name
             })
+        else:
+            # ファイルが見つからない場合は、サンプルファイルの存在を確認
+            sample_file = f'sample_data/{file.replace(".xlsx", "_sample.xlsx")}'
+            if os.path.exists(sample_file):
+                if file == '小テスト Retrieved from コーパス4500 4th Edition.xlsx':
+                    display_name = 'コーパス4500 (サンプル)'
+                elif file == 'ターゲット1900.xlsx':
+                    display_name = 'ターゲット1900 (サンプル)'
+                elif file == 'システム英単語.xlsx':
+                    display_name = 'システム英単語 (サンプル)'
+                else:
+                    display_name = file.replace('.xlsx', '') + ' (サンプル)'
+                
+                files.append({
+                    'filename': sample_file,
+                    'display_name': display_name
+                })
     
     return files
 
