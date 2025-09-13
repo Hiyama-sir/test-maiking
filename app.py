@@ -98,16 +98,30 @@ def generate_test():
         if not selected_rows:
             return jsonify({'error': '行番号が選択されていません'}), 400
         
-        # Excelデータを読み込み
-        excel_data = load_excel_data()
+        # 選択されたファイルのデータを読み込み
+        selected_file = data.get('selected_file')
+        if selected_file:
+            excel_data = load_excel_data(selected_file)
+        else:
+            excel_data = load_excel_data()
         
         # 選択された行番号のデータを取得
         test_data = []
+        print(f"選択された行番号: {selected_rows}")
+        print(f"利用可能なデータ数: {len(excel_data)}")
+        
         for row_num in selected_rows:
+            found = False
             for item in excel_data:
                 if item['row_number'] == row_num:
                     test_data.append(item)
+                    print(f"行番号 {row_num}: {item['word']} - {item['meaning']}")
+                    found = True
                     break
+            if not found:
+                print(f"警告: 行番号 {row_num} のデータが見つかりません")
+        
+        print(f"最終的なテストデータ数: {len(test_data)}")
         
         if not test_data:
             return jsonify({'error': '選択された行番号のデータが見つかりません'}), 400

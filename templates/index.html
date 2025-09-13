@@ -931,13 +931,16 @@
             testResult.style.display = 'none';
             errorMessage.style.display = 'none';
 
+            const selectedFile = document.getElementById('fileSelect').value;
+            
             fetch('/generate_test', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    selected_rows: selectedRows
+                    selected_rows: selectedRows,
+                    selected_file: selectedFile
                 })
             })
             .then(response => response.json())
