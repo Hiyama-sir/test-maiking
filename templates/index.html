@@ -864,6 +864,7 @@
 
     <script>
         let selectedRows = [];
+        let shuffledTestData = []; // ランダムに並び替えられたテストデータを保存
 
         function updateSelection() {
             const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
@@ -986,17 +987,20 @@
         function generate2ColumnTest(testData) {
             const testGrid = document.getElementById('testGrid');
             
+            // テストデータをランダムに並び替え（グローバル変数に保存）
+            shuffledTestData = [...testData].sort(() => Math.random() - 0.5);
+            
             let html = '';
             
             // 1列レイアウトで全幅表示
             html += '<div class="test-column">';
-            html += '<h3>テスト問題</h3>';
+            html += '<h3>テスト問題（ランダム順）</h3>';
             html += '<table class="test-table">';
             html += '<thead><tr><th class="number">番号</th><th class="word">英単語</th><th class="answer">解答欄</th></tr></thead>';
             html += '<tbody>';
-            testData.forEach((item, index) => {
+            shuffledTestData.forEach((item, index) => {
                 html += `<tr>
-                    <td class="number">${item.row_number}</td>
+                    <td class="number">${index + 1}</td>
                     <td class="word">${item.word}</td>
                     <td class="answer"></td>
                 </tr>`;
@@ -1014,17 +1018,20 @@
             // 単語数を更新
             answerWordCount.textContent = testData.length;
             
+            // 問題用紙と同じランダム順序を使用
+            const shuffledData = shuffledTestData.length > 0 ? shuffledTestData : [...testData].sort(() => Math.random() - 0.5);
+            
             let html = '';
             
             // 1列レイアウトで全幅表示
             html += '<div class="test-column">';
-            html += '<h3>回答用紙（解答付き）</h3>';
+            html += '<h3>回答用紙（解答付き・ランダム順）</h3>';
             html += '<table class="test-table">';
             html += '<thead><tr><th class="number">番号</th><th class="word">英単語</th><th class="answer">解答</th></tr></thead>';
             html += '<tbody>';
-            testData.forEach((item, index) => {
+            shuffledData.forEach((item, index) => {
                 html += `<tr>
-                    <td class="number">${item.row_number}</td>
+                    <td class="number">${index + 1}</td>
                     <td class="word">${item.word}</td>
                     <td class="answer">${item.meaning}</td>
                 </tr>`;
