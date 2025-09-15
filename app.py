@@ -1,8 +1,12 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from openpyxl import load_workbook
 import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
+app.secret_key = 'your-secret-key-here'  # セッション用の秘密鍵
 
 def load_excel_data(filename=None):
     """Excelファイルからデータを読み込む"""
@@ -168,6 +172,84 @@ def get_available_files_api():
     """利用可能なファイル一覧を取得"""
     files = get_available_files()
     return jsonify(files)
+
+@app.route('/contact')
+def contact():
+    """問い合わせフォームページ"""
+    return render_template('contact.html')
+
+@app.route('/submit_contact', methods=['POST'])
+def submit_contact():
+    """問い合わせフォームの送信処理"""
+    try:
+        name = request.form.get('name', '').strip()
+        subject = request.form.get('subject', '').strip()
+        message = request.form.get('message', '').strip()
+        
+        # バリデーション
+        if not name or not subject or not message:
+            flash('すべての項目を入力してください。', 'error')
+            return redirect(url_for('contact'))
+        
+        # メール送信（実際の送信は環境変数で設定）
+        send_contact_email(name, subject, message)
+        
+        flash('お問い合わせありがとうございます。内容を確認次第、ご連絡いたします。', 'success')
+        return redirect(url_for('contact'))
+        
+    except Exception as e:
+        flash(f'エラーが発生しました: {str(e)}', 'error')
+        return redirect(url_for('contact'))
+
+def send_contact_email(name, subject, message):
+    """問い合わせメールを送信"""
+    try:
+        # メール設定（環境変数から取得、なければデフォルト値）
+        smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
+        smtp_port = int(os.environ.get('SMTP_PORT', '587'))
+        smtp_username = os.environ.get('SMTP_USERNAME', '')
+        smtp_password = os.environ.get('SMTP_PASSWORD', '')
+        contact_email = os.environ.get('CONTACT_EMAIL', 'contact@example.com')
+        
+        # メール内容
+        msg = MIMEMultipart()
+        msg['From'] = smtp_username
+        msg['To'] = contact_email
+        msg['Subject'] = f'[テスト問題ジェネレーター] {subject}'
+        
+        body = f"""
+新しい英単語帳の追加要望が届きました。
+
+送信者名: {name}
+件名: {subject}
+
+メッセージ:
+{message}
+
+---
+このメールはテスト問題ジェネレーターの問い合わせフォームから送信されました。
+        """
+        
+        msg.attach(MIMEText(body, 'plain', 'utf-8'))
+        
+        # メール送信（SMTP設定がある場合のみ）
+        if smtp_username and smtp_password:
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls()
+            server.login(smtp_username, smtp_password)
+            text = msg.as_string()
+            server.sendmail(smtp_username, contact_email, text)
+            server.quit()
+        else:
+            # SMTP設定がない場合はログに出力
+            print(f"問い合わせメール（送信設定なし）:")
+            print(f"送信者: {name}")
+            print(f"件名: {subject}")
+            print(f"メッセージ: {message}")
+            
+    except Exception as e:
+        print(f"メール送信エラー: {e}")
+        # エラーが発生してもアプリケーションは継続
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))

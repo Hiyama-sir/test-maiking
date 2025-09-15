@@ -45,7 +45,12 @@ python app.py
 ### Renderデプロイ
 
 1. GitHubリポジトリをRenderに接続
-2. 環境変数は設定不要
+2. 環境変数を設定（問い合わせフォーム機能を使用する場合）:
+   - `CONTACT_EMAIL`: 問い合わせ先メールアドレス
+   - `SMTP_USERNAME`: SMTPユーザー名
+   - `SMTP_PASSWORD`: SMTPパスワード
+   - `SMTP_SERVER`: SMTPサーバー（デフォルト: smtp.gmail.com）
+   - `SMTP_PORT`: SMTPポート（デフォルト: 587）
 3. デプロイ後、サンプルファイルが利用可能
 
 ## 使用方法
@@ -68,8 +73,29 @@ test-maiking/
 └── README.md            # このファイル
 ```
 
+## 環境変数設定
+
+問い合わせフォーム機能を使用する場合は、以下の環境変数を設定してください：
+
+```bash
+# 問い合わせ先メールアドレス
+CONTACT_EMAIL=your-email@example.com
+
+# SMTP設定（Gmailの場合）
+SMTP_USERNAME=your-gmail@gmail.com
+SMTP_PASSWORD=your-app-password
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+```
+
+### Gmail設定の注意事項
+- Gmailを使用する場合は、アプリパスワードを設定してください
+- 通常のパスワードではなく、2段階認証のアプリパスワードが必要です
+- アプリパスワードは Googleアカウント設定 > セキュリティ > 2段階認証 > アプリパスワード で生成できます
+
 ## 注意事項
 
 - 実際のExcelファイルは`.gitignore`で除外されています
 - ローカル環境では実際のファイルを配置してください
 - Renderではサンプルファイルが利用可能です
+- 環境変数は本番環境でのみ設定し、Gitには含めないでください
