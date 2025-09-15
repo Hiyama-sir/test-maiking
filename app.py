@@ -192,9 +192,13 @@ def submit_contact():
             return redirect(url_for('contact'))
         
         # メール送信（実際の送信は環境変数で設定）
-        send_contact_email(name, subject, message)
+        email_sent = send_contact_email(name, subject, message)
         
-        flash('お問い合わせありがとうございます。内容を確認次第、ご連絡いたします。', 'success')
+        if email_sent:
+            flash('お問い合わせありがとうございます。メールを送信しました。内容を確認の上、ご連絡いたします。', 'success')
+        else:
+            flash('お問い合わせを受け付けましたが、メール送信に失敗しました。しばらくしてから再度お試しください。', 'warning')
+        
         return redirect(url_for('contact'))
         
     except Exception as e:
@@ -251,6 +255,7 @@ def send_contact_email(name, subject, message):
             server.sendmail(smtp_username, contact_email, text)
             server.quit()
             print("メール送信が完了しました。")
+            return True  # 送信成功を返す
         else:
             # SMTP設定がない場合はログに出力
             print("SMTP設定が不完全です。メール送信をスキップします。")
@@ -258,11 +263,12 @@ def send_contact_email(name, subject, message):
             print(f"送信者: {name}")
             print(f"件名: {subject}")
             print(f"メッセージ: {message}")
+            return False  # 送信失敗を返す
             
     except Exception as e:
         print(f"メール送信エラー: {e}")
         print(f"エラーの詳細: {type(e).__name__}")
-        # エラーが発生してもアプリケーションは継続
+        return False  # エラー時は送信失敗を返す
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))
