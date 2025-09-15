@@ -211,6 +211,15 @@ def send_contact_email(name, subject, message):
         smtp_password = os.environ.get('SMTP_PASSWORD', '')
         contact_email = os.environ.get('CONTACT_EMAIL', 'contact@example.com')
         
+        # デバッグ情報を出力
+        print(f"=== メール送信デバッグ情報 ===")
+        print(f"SMTP_SERVER: {smtp_server}")
+        print(f"SMTP_PORT: {smtp_port}")
+        print(f"SMTP_USERNAME: {'設定済み' if smtp_username else '未設定'}")
+        print(f"SMTP_PASSWORD: {'設定済み' if smtp_password else '未設定'}")
+        print(f"CONTACT_EMAIL: {contact_email}")
+        print(f"===============================")
+        
         # メール内容
         msg = MIMEMultipart()
         msg['From'] = smtp_username
@@ -234,14 +243,17 @@ def send_contact_email(name, subject, message):
         
         # メール送信（SMTP設定がある場合のみ）
         if smtp_username and smtp_password:
+            print("SMTP設定が検出されました。メール送信を試行します...")
             server = smtplib.SMTP(smtp_server, smtp_port)
             server.starttls()
             server.login(smtp_username, smtp_password)
             text = msg.as_string()
             server.sendmail(smtp_username, contact_email, text)
             server.quit()
+            print("メール送信が完了しました。")
         else:
             # SMTP設定がない場合はログに出力
+            print("SMTP設定が不完全です。メール送信をスキップします。")
             print(f"問い合わせメール（送信設定なし）:")
             print(f"送信者: {name}")
             print(f"件名: {subject}")
@@ -249,6 +261,7 @@ def send_contact_email(name, subject, message):
             
     except Exception as e:
         print(f"メール送信エラー: {e}")
+        print(f"エラーの詳細: {type(e).__name__}")
         # エラーが発生してもアプリケーションは継続
 
 if __name__ == '__main__':
