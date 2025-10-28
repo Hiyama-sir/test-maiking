@@ -48,4 +48,39 @@ Thumbs.db
 
 # Temporary files
 *.tmp
-*.temp
+*.temp# Python
+venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Office temp files
+~cd "/Users/hiyama/Documents/アプリケーション/テスト問題ジェネレーター" && printf "# Python
+venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Office temp files
+~$*
+
+# Local files not for repo
+uploads/
+*.log
+
+# Excel backups
+*.tmp
+
+" >> .gitignore && git add .gitignore app.py && git commit -m "Add LEAP.xlsx support and update file list; add .gitignore" && git push origin main
+
+# Local files not for repo
+uploads/
+*.log
+
+# Excel backups
+*.tmp
+
