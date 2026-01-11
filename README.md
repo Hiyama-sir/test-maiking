@@ -4,7 +4,7 @@ FlaskアプリケーションでExcelファイルから単語を選択してテ�
 
 ## 機能
 
-- 3つの単語集から選択可能（コーパス4500、ターゲット1900、システム英単語）
+- 4つの単語集から選択可能（コーパス4500、ターゲット1900、システム英単語、LEAP）
 - 個別選択、範囲選択、ランダム選択
 - 大きな解答欄（400px × 100px）
 - 問題用紙と回答用紙の分離印刷
@@ -36,6 +36,7 @@ pip install -r requirements.txt
 - `小テスト Retrieved from コーパス4500 4th Edition.xlsx`
 - `ターゲット1900.xlsx`
 - `システム英単語.xlsx`
+- `LEAP.xlsx`
 
 5. アプリケーションを起動
 ```bash
@@ -51,7 +52,58 @@ python app.py
    - `SMTP_PASSWORD`: SMTPパスワード
    - `SMTP_SERVER`: SMTPサーバー（デフォルト: smtp.gmail.com）
    - `SMTP_PORT`: SMTPポート（デフォルト: 587）
-3. デプロイ後、サンプルファイルが利用可能
+3. Start Commandを `gunicorn app:app` に設定
+4. デプロイ後、サンプルファイルが利用可能
+
+### AWS Elastic Beanstalkデプロイ
+
+1. AWS CLIとEB CLIをインストール
+```bash
+# AWS CLI
+pip install awscli
+
+# EB CLI
+pip install awsebcli
+```
+
+2. AWS認証情報を設定
+```bash
+aws configure
+```
+
+3. Elastic Beanstalk環境を初期化
+```bash
+eb init -p python-3.11 quiz-generator --region ap-northeast-1
+```
+
+4. 環境を作成（初回のみ）
+```bash
+eb create quiz-generator-env
+```
+
+5. デプロイ
+```bash
+eb deploy
+```
+
+6. 環境変数を設定（必要に応じて）
+```bash
+eb setenv CONTACT_EMAIL=your-email@example.com \
+           SMTP_USERNAME=your-smtp-username \
+           SMTP_PASSWORD=your-smtp-password \
+           SMTP_SERVER=smtp.gmail.com \
+           SMTP_PORT=587
+```
+
+7. アプリケーションを開く
+```bash
+eb open
+```
+
+**注意事項**:
+- Excelファイルはプロジェクトルートに配置されている必要があります
+- サンプルファイルは `sample_data/` ディレクトリに配置されています
+- 環境変数はAWS Elastic Beanstalkのコンソールからも設定できます
 
 ## 使用方法
 
@@ -65,10 +117,16 @@ python app.py
 ```
 test-maiking/
 ├── app.py                 # メインアプリケーション
+├── application.py         # Elastic Beanstalk用エントリーポイント
 ├── templates/
-│   └── index.html        # フロントエンド
+│   ├── index.html        # フロントエンド
+│   └── contact.html      # 問い合わせフォーム
+├── .ebextensions/        # Elastic Beanstalk設定ファイル
+│   └── 01_flask.config
 ├── sample_data/          # サンプルファイル（Gitに含まれる）
 ├── requirements.txt      # 依存関係
+├── Procfile             # Procfile（Render用）
+├── render.yaml          # Render設定ファイル
 ├── .gitignore           # Git除外設定
 └── README.md            # このファイル
 ```
