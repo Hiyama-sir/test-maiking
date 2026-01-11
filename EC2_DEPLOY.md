@@ -16,17 +16,14 @@
    - AWS コンソールから「インスタンスに接続」をクリック
    - EC2 Instance Connectを選択して接続
 
-2. **デプロイスクリプトをダウンロード**
+2. **デプロイスクリプトをダウンロード（curlを使用）**
    ```bash
    cd /tmp
-   wget https://raw.githubusercontent.com/Hiyama-sir/test-maiking/main/deploy_ec2.sh
+   curl -O https://raw.githubusercontent.com/Hiyama-sir/test-maiking/main/deploy_ec2.sh
    chmod +x deploy_ec2.sh
    ```
 
-3. **スクリプトを実行**
-   ```bash
-   ./deploy_ec2.sh
-   ```
+   または、`wget`や`curl`が使えない場合は**方法2: 手動デプロイ**を使用してください。
 
 ### 方法2: 手動デプロイ
 
