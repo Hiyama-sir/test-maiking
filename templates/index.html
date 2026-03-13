@@ -739,28 +739,11 @@
                 <div class="quick-actions">
                     <button class="quick-btn" onclick="selectAll()">全選択</button>
                     <button class="quick-btn" onclick="deselectAll()">全解除</button>
-                    <button class="quick-btn" onclick="selectRandom(5)">ランダム5個</button>
-                    <button class="quick-btn" onclick="selectRandom(10)">ランダム10個</button>
+                    <button class="quick-btn" onclick="selectRandom(30)">ランダム30個</button>
+                    <button class="quick-btn" onclick="selectRandom(50)">ランダム50個</button>
                 </div>
 
-                <div class="range-selector">
-                    <h4>範囲指定で選択</h4>
-                    <div class="range-inputs">
-                        <div class="range-input-group">
-                            <label for="startRow">開始行</label>
-                            <input type="number" id="startRow" placeholder="2" min="1">
-                        </div>
-                        <div class="range-separator">〜</div>
-                        <div class="range-input-group">
-                            <label for="endRow">終了行</label>
-                            <input type="number" id="endRow" placeholder="10" min="1">
-                        </div>
-                    </div>
-                    <div class="range-buttons">
-                        <button class="range-btn" onclick="selectRange()">範囲を選択</button>
-                        <button class="range-btn" onclick="clearRangeInputs()">クリア</button>
-                    </div>
-                </div>
+                
 
                 <div class="random-range-selector">
                     <h4>範囲からランダム選択</h4>
@@ -824,10 +807,11 @@
 
                 <div class="test-result" id="testResult">
                     <h3>生成されたテスト</h3>
+                    <div id="simpleTestBookName" style="margin-bottom: 10px; color: #555; font-size: 0.95em;"></div>
                     <div id="testContent"></div>
                     <div style="text-align: center; margin-top: 20px;">
                         <button class="btn" onclick="show2ColumnTest()">2列レイアウトで表示</button>
-                        <button class="btn btn-secondary" onclick="showAnswerSheet()">回答用紙を表示</button>
+                        <button class="btn btn-secondary" onclick="showAnswerSheet()">解答用紙を表示</button>
                     </div>
                 </div>
 
@@ -835,7 +819,7 @@
                 <div class="test-format-2column" id="testFormat2Column" style="display: none;">
                     <div class="test-header">
                         <h2>英単語テスト</h2>
-                        <div class="info">選択された単語数: <span id="testWordCount">0</span>個</div>
+                        <div class="info">単語帳: <span id="testBookName"></span> ／ 選択された単語数: <span id="testWordCount">0</span>個</div>
                     </div>
                     
                     <div class="test-grid" id="testGrid">
@@ -851,8 +835,8 @@
                 <!-- 回答用紙（解答付き）の形式 -->
                 <div class="answer-sheet-format" id="answerSheetFormat" style="display: none;">
                     <div class="test-header">
-                        <h2>英単語テスト - 回答用紙</h2>
-                        <div class="info">選択された単語数: <span id="answerWordCount">0</span>個</div>
+                        <h2>英単語テスト - 解答用紙</h2>
+                        <div class="info">単語帳: <span id="answerBookName"></span> ／ 選択された単語数: <span id="answerWordCount">0</span>個</div>
                     </div>
                     
                     <div class="test-grid" id="answerGrid">
@@ -860,7 +844,7 @@
                     </div>
                     
                     <div class="print-controls">
-                        <button class="btn" onclick="printAnswerSheet()">回答用紙を印刷</button>
+                        <button class="btn" onclick="printAnswerSheet()">解答用紙を印刷</button>
                         <button class="btn btn-secondary" onclick="showSimpleTest()">シンプル表示に戻す</button>
                     </div>
                 </div>
@@ -970,6 +954,13 @@
             const testContent = document.getElementById('testContent');
             const testFormat2Column = document.getElementById('testFormat2Column');
             const testWordCount = document.getElementById('testWordCount');
+
+            // 使用中の単語帳名を取得して表示
+            const fileSelect = document.getElementById('fileSelect');
+            const bookName = fileSelect.options[fileSelect.selectedIndex].text;
+            document.getElementById('testBookName').textContent = bookName;
+            document.getElementById('answerBookName').textContent = bookName;
+            document.getElementById('simpleTestBookName').textContent = '使用単語帳: ' + bookName;
 
             // 単語数を更新
             testWordCount.textContent = testData.length;

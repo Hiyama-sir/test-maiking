@@ -84,3 +84,6 @@ uploads/
 # Excel backups
 *.tmp
 
+
+# 古文単語ファイル
+出る順に学ぶ頻出古文単語400.xlsx
