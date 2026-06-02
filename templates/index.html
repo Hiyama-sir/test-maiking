@@ -856,9 +856,32 @@
         let selectedRows = [];
         let shuffledTestData = []; // ランダムに並び替えられたテストデータを保存
 
+        function getWordCheckboxes() {
+            return Array.from(document.querySelectorAll('#checkboxContainer input[type="checkbox"]'));
+        }
+
+        function shuffleItems(items) {
+            const shuffled = [...items];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function getPositiveIntegerInput(id) {
+            const input = document.getElementById(id);
+            if (!input) {
+                return null;
+            }
+
+            const value = Number.parseInt(input.value, 10);
+            return Number.isInteger(value) && value > 0 ? value : null;
+        }
+
         function updateSelection() {
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
-            selectedRows = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            const checkboxes = getWordCheckboxes().filter(cb => cb.checked);
+            selectedRows = checkboxes.map(cb => Number.parseInt(cb.value, 10));
             
             const selectedCount = document.getElementById('selectedCount');
             const generateBtn = document.getElementById('generateBtn');
@@ -879,21 +902,21 @@
         }
 
         function selectAll() {
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const checkboxes = getWordCheckboxes();
             checkboxes.forEach(cb => cb.checked = true);
             updateSelection();
         }
 
         function deselectAll() {
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const checkboxes = getWordCheckboxes();
             checkboxes.forEach(cb => cb.checked = false);
             updateSelection();
         }
 
         function selectRandom(count) {
             deselectAll();
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-            const shuffled = Array.from(checkboxes).sort(() => 0.5 - Math.random());
+            const checkboxes = getWordCheckboxes();
+            const shuffled = shuffleItems(checkboxes);
             
             for (let i = 0; i < Math.min(count, checkboxes.length); i++) {
                 shuffled[i].checked = true;
@@ -1124,8 +1147,8 @@
         }
 
         function selectRange() {
-            const startRow = parseInt(document.getElementById('startRow').value);
-            const endRow = parseInt(document.getElementById('endRow').value);
+            const startRow = getPositiveIntegerInput('startRow');
+            const endRow = getPositiveIntegerInput('endRow');
             
             if (!startRow || !endRow) {
                 alert('開始行と終了行を入力してください');
@@ -1137,14 +1160,14 @@
                 return;
             }
             
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const checkboxes = getWordCheckboxes();
             let selectedCount = 0;
             
             // 既存の選択をクリア
             deselectAll();
             
             for (let i = 0; i < checkboxes.length; i++) {
-                const rowNumber = parseInt(checkboxes[i].value);
+                const rowNumber = Number.parseInt(checkboxes[i].value, 10);
                 if (rowNumber >= startRow && rowNumber <= endRow) {
                     checkboxes[i].checked = true;
                     selectedCount++;
@@ -1166,9 +1189,9 @@
         }
 
         function selectRandomFromRange() {
-            const startRow = parseInt(document.getElementById('randomStartRow').value);
-            const endRow = parseInt(document.getElementById('randomEndRow').value);
-            const count = parseInt(document.getElementById('randomCount').value);
+            const startRow = getPositiveIntegerInput('randomStartRow');
+            const endRow = getPositiveIntegerInput('randomEndRow');
+            const count = getPositiveIntegerInput('randomCount');
             
             if (!startRow || !endRow || !count) {
                 alert('開始行、終了行、個数をすべて入力してください');
@@ -1180,16 +1203,13 @@
                 return;
             }
             
-            const availableRows = [];
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const checkboxes = getWordCheckboxes();
             
             // 指定範囲内の行番号を取得
-            for (let i = 0; i < checkboxes.length; i++) {
-                const rowNumber = parseInt(checkboxes[i].value);
-                if (rowNumber >= startRow && rowNumber <= endRow) {
-                    availableRows.push(checkboxes[i]);
-                }
-            }
+            const availableRows = checkboxes.filter((checkbox) => {
+                const rowNumber = Number.parseInt(checkbox.value, 10);
+                return rowNumber >= startRow && rowNumber <= endRow;
+            });
             
             if (availableRows.length === 0) {
                 alert('指定された範囲に単語が見つかりませんでした');
@@ -1205,7 +1225,7 @@
             deselectAll();
             
             // ランダムに選択
-            const shuffled = availableRows.sort(() => 0.5 - Math.random());
+            const shuffled = shuffleItems(availableRows);
             for (let i = 0; i < count; i++) {
                 shuffled[i].checked = true;
             }
