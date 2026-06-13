@@ -815,6 +815,7 @@
     <script>
         let selectedRows = [];
         let shuffledTestData = [];
+        let currentTestData = [];
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -955,6 +956,7 @@
         function clearSelection() {
             deselectAll();
             shuffledTestData = [];
+            currentTestData = [];
             document.getElementById('testResult').style.display = 'none';
             document.getElementById('testFormat2Column').style.display = 'none';
             document.getElementById('answerSheetFormat').style.display = 'none';
@@ -1008,31 +1010,51 @@
             const fileSelect = document.getElementById('fileSelect');
             const bookName = fileSelect.options[fileSelect.selectedIndex].text;
             const settings = getTestSettings();
+            currentTestData = testData;
 
             document.getElementById('testBookName').textContent = bookName;
             document.getElementById('answerBookName').textContent = bookName;
             document.getElementById('simpleTestBookName').textContent = `単語帳: ${bookName}`;
             applySheetSettings(settings, testData.length);
 
-            testContent.innerHTML = testData.map((item, index) => `
+            testResult.style.display = 'block';
+            document.getElementById('testFormat2Column').style.display = 'none';
+            document.getElementById('answerSheetFormat').style.display = 'none';
+
+            shuffledTestData = shuffleItems(testData);
+            renderGeneratedTest(settings);
+            updateSelection();
+        }
+
+        function renderSimpleTest(settings) {
+            const testContent = document.getElementById('testContent');
+
+            testContent.innerHTML = currentTestData.map((item, index) => `
                 <div class="test-item">
                     <div class="question">${index + 1}. ${escapeHtml(getPromptText(item, settings))}</div>
                     <div class="answer">${escapeHtml(getAnswerText(item, settings))}</div>
                 </div>
             `).join('');
-
-            testResult.style.display = 'block';
-            document.getElementById('testFormat2Column').style.display = 'none';
-            document.getElementById('answerSheetFormat').style.display = 'none';
-
-            generate2ColumnTest(testData, settings);
-            generateAnswerSheet(testData, settings);
-            updateSelection();
         }
 
-        function generate2ColumnTest(testData, settings) {
+        function renderGeneratedTest(settings = getTestSettings()) {
+            if (currentTestData.length === 0) {
+                return;
+            }
+
+            applySheetSettings(settings, currentTestData.length);
+            renderSimpleTest(settings);
+            generate2ColumnTest(settings);
+            generateAnswerSheet(settings);
+        }
+
+        function handleSettingsChange() {
+            renderGeneratedTest();
+        }
+
+        function generate2ColumnTest(settings) {
             const testGrid = document.getElementById('testGrid');
-            shuffledTestData = shuffleItems(testData);
+            const orderedData = shuffledTestData.length > 0 ? shuffledTestData : currentTestData;
 
             testGrid.innerHTML = `
                 <table class="test-table">
@@ -1044,7 +1066,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        ${shuffledTestData.map((item, index) => `
+                        ${orderedData.map((item, index) => `
                             <tr>
                                 <td class="number">${index + 1}</td>
                                 <td class="word">${escapeHtml(getPromptText(item, settings))}</td>
@@ -1056,9 +1078,9 @@
             `;
         }
 
-        function generateAnswerSheet(testData, settings) {
+        function generateAnswerSheet(settings) {
             const answerGrid = document.getElementById('answerGrid');
-            const shuffledData = shuffledTestData.length > 0 ? shuffledTestData : shuffleItems(testData);
+            const orderedData = shuffledTestData.length > 0 ? shuffledTestData : currentTestData;
 
             answerGrid.innerHTML = `
                 <table class="test-table">
@@ -1070,7 +1092,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        ${shuffledData.map((item, index) => `
+                        ${orderedData.map((item, index) => `
                             <tr>
                                 <td class="number">${index + 1}</td>
                                 <td class="word">${escapeHtml(getPromptText(item, settings))}</td>
@@ -1259,6 +1281,15 @@
                 now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
                 dateInput.value = now.toISOString().slice(0, 10);
             }
+
+            ['testTitleInput', 'testDateInput', 'questionModeSelect', 'answerSizeSelect'].forEach((id) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', handleSettingsChange);
+                    element.addEventListener('change', handleSettingsChange);
+                }
+            });
+
             updateSelection();
         });
     </script>
