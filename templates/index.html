@@ -262,6 +262,14 @@
             margin-bottom: 12px;
         }
 
+        .word-tools {
+            display: grid;
+            grid-template-columns: minmax(180px, 1fr) auto;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
         .count-chip {
             min-width: 92px;
             padding: 6px 10px;
@@ -312,8 +320,8 @@
             display: grid;
             grid-template-columns: auto 1fr;
             gap: 8px;
-            align-items: center;
-            min-height: 42px;
+            align-items: flex-start;
+            min-height: 54px;
             padding: 8px 10px;
             background: var(--surface);
             border: 1px solid var(--line);
@@ -347,9 +355,8 @@
 
         .row-meta {
             min-width: 0;
-            display: flex;
-            align-items: baseline;
-            gap: 8px;
+            display: grid;
+            gap: 2px;
         }
 
         .row-number {
@@ -363,6 +370,16 @@
             overflow: hidden;
             color: var(--text);
             font-weight: 600;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .meaning-preview {
+            min-width: 0;
+            overflow: hidden;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 400;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
@@ -556,10 +573,16 @@
             }
 
             .word-toolbar,
+            .word-tools,
             .generator-actions,
             .print-controls {
                 align-items: stretch;
                 flex-direction: column;
+            }
+
+            .word-tools {
+                display: grid;
+                grid-template-columns: 1fr;
             }
 
             .button-row {
@@ -628,7 +651,6 @@
         <header class="topbar">
             <div class="title-block">
                 <h1>小テスト作成</h1>
-                <p>単語帳から、必要な分だけ印刷。</p>
             </div>
             <a class="request-link" href="/contact">単語帳を追加する</a>
         </header>
@@ -644,8 +666,19 @@
                         <div class="field">
                             <label for="fileSelect">単語帳</label>
                             <select id="fileSelect" onchange="loadSelectedFile()">
-                                {% for file in available_files %}
-                                <option value="{{ file.filename }}" {% if loop.first %}selected{% endif %}>{{ file.display_name }}</option>
+                                {% set selected = namespace(done=false) %}
+                                {% for category in available_categories %}
+                                <optgroup label="{{ category }}">
+                                    {% for file in available_files if file.category == category %}
+                                    <option
+                                        value="{{ file.filename }}"
+                                        data-category="{{ file.category }}"
+                                        data-source-label="{{ file.source_label }}"
+                                        data-default-title="{{ file.default_title }}"
+                                        {% if not selected.done %}selected{% set selected.done = true %}{% endif %}
+                                    >{{ file.display_name }}</option>
+                                    {% endfor %}
+                                </optgroup>
                                 {% endfor %}
                             </select>
                         </div>
@@ -748,15 +781,19 @@
                     </div>
                 </div>
                 <div class="panel-body">
+                    <div class="word-tools">
+                        <input type="text" id="wordSearchInput" placeholder="単語・意味で検索" oninput="filterWordList()">
+                        <button class="btn btn-secondary btn-compact" type="button" onclick="clearWordSearch()">検索クリア</button>
+                    </div>
                     <div class="checkbox-container" id="checkboxContainer">
                         <div class="checkbox-list">
                         {% for item in data %}
-                        <div class="checkbox-item">
+                        <div class="checkbox-item" data-word="{{ item.word }}" data-meaning="{{ item.meaning }}">
                             <input type="checkbox" id="row{{ item.row_number }}" value="{{ item.row_number }}" onchange="updateSelection()">
                             <label for="row{{ item.row_number }}">
                                 <span class="row-meta">
-                                    <span class="row-number">{{ item.row_number }}</span>
                                     <span class="word-preview">{{ item.word }}</span>
+                                    <span class="meaning-preview">{{ item.row_number }}. {{ item.meaning }}</span>
                                 </span>
                             </label>
                         </div>
@@ -816,6 +853,7 @@
         let selectedRows = [];
         let shuffledTestData = [];
         let currentTestData = [];
+        const autoTitles = new Set(['英単語テスト', '英熟語テスト', '古文単語テスト', '小テスト']);
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -831,8 +869,36 @@
             return Array.from(document.querySelectorAll('#checkboxContainer input[type="checkbox"]'));
         }
 
+        function getSelectedFileMeta() {
+            const fileSelect = document.getElementById('fileSelect');
+            const option = fileSelect.options[fileSelect.selectedIndex];
+
+            return {
+                category: option?.dataset.category || '単語帳',
+                sourceLabel: option?.dataset.sourceLabel || '単語',
+                defaultTitle: option?.dataset.defaultTitle || '小テスト',
+            };
+        }
+
+        function syncMaterialLabels() {
+            const meta = getSelectedFileMeta();
+            const titleInput = document.getElementById('testTitleInput');
+            const questionModeSelect = document.getElementById('questionModeSelect');
+            const forwardOption = questionModeSelect.querySelector('option[value="word-to-meaning"]');
+            const reverseOption = questionModeSelect.querySelector('option[value="meaning-to-word"]');
+
+            forwardOption.textContent = `${meta.sourceLabel} → 意味`;
+            reverseOption.textContent = `意味 → ${meta.sourceLabel}`;
+            titleInput.placeholder = meta.defaultTitle;
+
+            if (!titleInput.value.trim() || autoTitles.has(titleInput.value.trim())) {
+                titleInput.value = meta.defaultTitle;
+            }
+        }
+
         function getTestSettings() {
-            const title = document.getElementById('testTitleInput').value.trim() || '英単語テスト';
+            const meta = getSelectedFileMeta();
+            const title = document.getElementById('testTitleInput').value.trim() || meta.defaultTitle;
             const date = document.getElementById('testDateInput').value;
             const questionMode = document.getElementById('questionModeSelect').value;
             const answerSize = document.getElementById('answerSizeSelect').value;
@@ -843,9 +909,9 @@
                 date,
                 answerSize,
                 isReverse,
-                modeLabel: isReverse ? '意味 → 英単語' : '英単語 → 意味',
-                promptHeader: isReverse ? '意味' : '英単語',
-                answerHeader: isReverse ? '英単語' : '解答欄',
+                modeLabel: isReverse ? `意味 → ${meta.sourceLabel}` : `${meta.sourceLabel} → 意味`,
+                promptHeader: isReverse ? '意味' : meta.sourceLabel,
+                answerHeader: isReverse ? meta.sourceLabel : '解答欄',
             };
         }
 
@@ -1221,8 +1287,10 @@
             const loading = document.getElementById('loading');
             const checkboxContainer = document.getElementById('checkboxContainer');
 
+            syncMaterialLabels();
             loading.style.display = 'block';
             checkboxContainer.innerHTML = '';
+            document.getElementById('wordSearchInput').value = '';
 
             fetch('/load_file', {
                 method: 'POST',
@@ -1257,12 +1325,12 @@
             checkboxContainer.innerHTML = `
                 <div class="checkbox-list">
                     ${data.map((item) => `
-                        <div class="checkbox-item">
+                        <div class="checkbox-item" data-word="${escapeHtml(item.word)}" data-meaning="${escapeHtml(item.meaning)}">
                             <input type="checkbox" id="row${item.row_number}" value="${item.row_number}" onchange="updateSelection()">
                             <label for="row${item.row_number}">
                                 <span class="row-meta">
-                                    <span class="row-number">${item.row_number}</span>
-                                    <span class="word-preview">${item.word}</span>
+                                    <span class="word-preview">${escapeHtml(item.word)}</span>
+                                    <span class="meaning-preview">${item.row_number}. ${escapeHtml(item.meaning)}</span>
                                 </span>
                             </label>
                         </div>
@@ -1272,6 +1340,28 @@
 
             visibleWordCount.textContent = data.length;
             updateSelection();
+        }
+
+        function filterWordList() {
+            const query = document.getElementById('wordSearchInput').value.trim().toLowerCase();
+            const items = Array.from(document.querySelectorAll('#checkboxContainer .checkbox-item'));
+            let visibleCount = 0;
+
+            items.forEach((item) => {
+                const haystack = `${item.dataset.word || ''} ${item.dataset.meaning || ''}`.toLowerCase();
+                const shouldShow = !query || haystack.includes(query);
+                item.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) {
+                    visibleCount += 1;
+                }
+            });
+
+            document.getElementById('visibleWordCount').textContent = visibleCount;
+        }
+
+        function clearWordSearch() {
+            document.getElementById('wordSearchInput').value = '';
+            filterWordList();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1290,6 +1380,8 @@
                 }
             });
 
+            syncMaterialLabels();
+            filterWordList();
             updateSelection();
         });
     </script>

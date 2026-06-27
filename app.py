@@ -8,32 +8,162 @@ from email.mime.multipart import MIMEMultipart
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'  # セッション用の秘密鍵
 
+EXCEL_FILES = [
+    {
+        'filename': '小テスト Retrieved from コーパス4500 4th Edition.xlsx',
+        'display_name': 'コーパス4500',
+        'category': '英単語',
+        'word_column': 0,
+        'meaning_column': 1,
+        'source_label': '英単語',
+        'default_title': '英単語テスト',
+    },
+    {
+        'filename': 'ターゲット1900.xlsx',
+        'display_name': 'ターゲット1900',
+        'category': '英単語',
+        'word_column': 0,
+        'meaning_column': 1,
+        'source_label': '英単語',
+        'default_title': '英単語テスト',
+    },
+    {
+        'filename': 'システム英単語.xlsx',
+        'display_name': 'システム英単語',
+        'category': '英単語',
+        'word_column': 0,
+        'meaning_column': 1,
+        'source_label': '英単語',
+        'default_title': '英単語テスト',
+    },
+    {
+        'filename': 'LEAP.xlsx',
+        'display_name': 'LEAP',
+        'category': '英単語',
+        'word_column': 0,
+        'meaning_column': 1,
+        'source_label': '英単語',
+        'default_title': '英単語テスト',
+    },
+    {
+        'filename': '英検2級_出る順パス単　.xlsx',
+        'display_name': '英検2級 出る順パス単',
+        'category': '英単語',
+        'word_column': 0,
+        'meaning_column': 1,
+        'source_label': '英単語',
+        'default_title': '英単語テスト',
+    },
+    {
+        'filename': '英検準1級_出る順パス単.xlsx',
+        'display_name': '英検準1級 出る順パス単',
+        'category': '英単語',
+        'word_column': 0,
+        'meaning_column': 1,
+        'source_label': '英単語',
+        'default_title': '英単語テスト',
+    },
+    {
+        'filename': '単語帳EX 準1級.xlsx',
+        'display_name': '単語帳EX 準1級',
+        'category': '英単語',
+        'word_column': 0,
+        'meaning_column': 1,
+        'source_label': '英単語',
+        'default_title': '英単語テスト',
+    },
+    {
+        'filename': '速読英熟語.xlsx',
+        'display_name': '速読英熟語',
+        'category': '英熟語',
+        'word_column': 0,
+        'meaning_column': 1,
+        'source_label': '英熟語',
+        'default_title': '英熟語テスト',
+    },
+    {
+        'filename': '古文単語/古文単語315.xlsx',
+        'display_name': '古文単語315',
+        'category': '古文単語',
+        'word_column': 1,
+        'meaning_column': 2,
+        'source_label': '古文単語',
+        'default_title': '古文単語テスト',
+    },
+    {
+        'filename': '出る順に学ぶ頻出古文単語400.xlsx',
+        'display_name': '出る順に学ぶ頻出古文単語400',
+        'category': '古文単語',
+        'word_column': 0,
+        'meaning_column': 1,
+        'source_label': '古文単語',
+        'default_title': '古文単語テスト',
+    },
+]
+
+HEADER_VALUES = {
+    '単語名', '単語', '英単語', '古文単語', 'word', 'Word', 'WORD',
+    '意味', 'meaning', 'Meaning', 'MEANING',
+}
+
+
+def get_file_config(filename=None):
+    """ファイルごとの読み込み設定を取得する"""
+    if filename is None:
+        return EXCEL_FILES[0]
+
+    for config in EXCEL_FILES:
+        if config['filename'] == filename:
+            return config
+
+    return {
+        'filename': filename,
+        'display_name': os.path.basename(filename),
+        'category': '単語帳',
+        'word_column': 0,
+        'meaning_column': 1,
+        'source_label': '単語',
+        'default_title': '小テスト',
+    }
+
+
 def load_excel_data(filename=None):
     """Excelファイルからデータを読み込む"""
     try:
-        # デフォルトのファイル名を設定
-        if filename is None:
-            filename = '小テスト Retrieved from コーパス4500 4th Edition.xlsx'
+        config = get_file_config(filename)
+        filename = config['filename']
+        word_column = config['word_column']
+        meaning_column = config['meaning_column']
         
         # Excelファイルを読み込み
         workbook = load_workbook(filename)
         worksheet = workbook.active
         
-        # A列（英単語）とB列（日本語）のデータを取得
-        # A1行目から直接データを読み込み
         data = []
         row_num = 1
         
         for row in worksheet.iter_rows(min_row=1, values_only=True):
-            if row[0] is not None and row[1] is not None:  # A列とB列の両方に値がある場合
-                # ヘッダー行（「単語名」など）を除外
-                if str(row[0]).strip() not in ['単語名', 'word', 'Word', 'WORD'] and str(row[1]).strip() not in ['意味', 'meaning', 'Meaning', 'MEANING']:
-                    data.append({
-                        'row_number': row_num,
-                        'word': str(row[0]),
-                        'meaning': str(row[1])
-                    })
-                    row_num += 1
+            if len(row) <= max(word_column, meaning_column):
+                continue
+
+            word = row[word_column]
+            meaning = row[meaning_column]
+
+            if word is None or meaning is None:
+                continue
+
+            word = str(word).strip()
+            meaning = str(meaning).strip()
+
+            if not word or not meaning or word in HEADER_VALUES or meaning in HEADER_VALUES:
+                continue
+
+            data.append({
+                'row_number': row_num,
+                'word': word,
+                'meaning': meaning
+            })
+            row_num += 1
         
         return data
     except Exception as e:
@@ -43,31 +173,19 @@ def load_excel_data(filename=None):
 def get_available_files():
     """利用可能なExcelファイルのリストを取得"""
     files = []
-    excel_files = {
-        '小テスト Retrieved from コーパス4500 4th Edition.xlsx': 'コーパス4500',
-        'ターゲット1900.xlsx': 'ターゲット1900',
-        'システム英単語.xlsx': 'システム英単語',
-        'LEAP.xlsx': 'LEAP',
-        '英検2級_出る順パス単　.xlsx': '英検2級 出る順パス単',
-        '英検準1級_出る順パス単.xlsx': '英検準1級 出る順パス単',
-        '単語帳EX 準1級.xlsx': '単語帳EX 準1級',
-        '速読英熟語.xlsx': '速読英熟語',
-    }
 
-    for file, display_name in excel_files.items():
+    for config in EXCEL_FILES:
+        file = config['filename']
         if os.path.exists(file):
-            files.append({
-                'filename': file,
-                'display_name': display_name
-            })
+            files.append(config)
         else:
             # ファイルが見つからない場合は、サンプルファイルの存在を確認
             sample_file = f'sample_data/{file.replace(".xlsx", "_sample.xlsx")}'
             if os.path.exists(sample_file):
-                files.append({
-                    'filename': sample_file,
-                    'display_name': display_name + ' (サンプル)'
-                })
+                sample_config = config.copy()
+                sample_config['filename'] = sample_file
+                sample_config['display_name'] = config['display_name'] + ' (サンプル)'
+                files.append(sample_config)
     
     return files
 
@@ -76,7 +194,16 @@ def index():
     """メインページ"""
     data = load_excel_data()
     available_files = get_available_files()
-    return render_template('index.html', data=data, available_files=available_files)
+    available_categories = []
+    for file in available_files:
+        if file['category'] not in available_categories:
+            available_categories.append(file['category'])
+    return render_template(
+        'index.html',
+        data=data,
+        available_files=available_files,
+        available_categories=available_categories
+    )
 
 
 @app.route('/generate_test', methods=['POST'])
